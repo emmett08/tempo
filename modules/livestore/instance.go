@@ -462,12 +462,10 @@ func (i *instance) writeHeadBlock(id []byte, liveTrace *livetraces.LiveTrace[*v1
 	minStart := uint32(liveTrace.CreatedAt.Add(-slackDuration).Unix())
 	maxEnd := uint32(liveTrace.LastAppend.Add(slackDuration).Unix())
 
-	if startSeconds < minStart {
-		startSeconds = minStart
-	}
-	if endSeconds > maxEnd {
-		endSeconds = maxEnd
-	}
+	// Clamp both bounds to the ingestion window. Traces entirely before or
+	// after the window must not create a block whose end precedes its start.
+	startSeconds = min(max(startSeconds, minStart), maxEnd)
+	endSeconds = max(startSeconds, min(endSeconds, maxEnd))
 
 	err := hb.AppendTrace(id, tr, startSeconds, endSeconds, false)
 	return hb.DataLength(), err
