@@ -28,3 +28,8 @@ needed to preserve original timestamps. The patch does not rewrite previously
 stored invalid block metadata. Repair those blocks separately from backups,
 using stored span timestamps, and verify data coverage rather than relying only
 on a successful HTTP status.
+
+Release CI installs the locked Jsonnet dependencies when checking generated
+examples. Updating them against upstream heads can remove the historical
+Kubernetes library version required by this release; dependency updates remain
+an explicit maintenance action.
