@@ -38,3 +38,8 @@ The release also pins Grafana's e2e test helper at
 `cfcdc6861c9cbf097547e905af8251a40f747350`, which replaces the removed MinIO
 community image with the Silo test image and command. This restores the S3
 integration fixtures without changing Tempo's runtime dependency versions.
+
+Upstream fix `f97d7856253481b24b8c3ed207c17676a2fbe7c9` also pins the
+compaction selector's clock in its one-second-window test. The production clock
+still defaults to `time.Now`; the test no longer depends on staying inside the
+same wall-clock second while the suite runs.
