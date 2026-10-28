@@ -1,0 +1,53 @@
+name: Fork Tempo image
+on:
+  push:
+    branches: [fix/3.0.3-block-time-bounds]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: fork-image-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  image:
+    if: github.repository == 'emmett08/tempo' && github.ref == 'refs/heads/fix/3.0.3-block-time-bounds'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
+        with:
+          go-version-file: go.mod
+      - name: Verify block bounds regressions
+        run: >-
+          go test -race ./modules/livestore ./modules/frontend
+          -run '^(TestLiveStoreBlockTimeBoundsOutsideSlack|TestBuildBackendRequestsRejectsInvalidBlockRange|TestLiveStoreUsesRecordTimestampForBlockStartAndEnd|TestBuildBackendRequestsExemplarsOneBlock)$'
+          -count=1 -timeout=15m
+      - name: Build Linux amd64 binary
+        run: GOOS=linux GOARCH=amd64 make tempo VERSION="3.0.3-emmett08.${GITHUB_SHA:0:12}"
+      - name: Build image from the pinned upstream Dockerfile
+        env:
+          IMAGE: ghcr.io/emmett08/tempo
+        run: |
+          docker build --platform linux/amd64 --build-arg TARGETARCH=amd64 \
+            --label org.opencontainers.image.source="https://github.com/emmett08/tempo" \
+            --label org.opencontainers.image.revision="$GITHUB_SHA" \
+            --label org.opencontainers.image.version="3.0.3-emmett08.${GITHUB_SHA:0:12}" \
+            -f cmd/tempo/Dockerfile -t "$IMAGE:git-$GITHUB_SHA" .
+          docker run --rm "$IMAGE:git-$GITHUB_SHA" --version
+      - name: Publish exact source image
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE: ghcr.io/emmett08/tempo
+        run: |
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker push "$IMAGE:git-$GITHUB_SHA"
+          printf 'Image: `%s:git-%s`\n' "$IMAGE" "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+      - name: Log out
+        if: always()
+        run: docker logout ghcr.io
