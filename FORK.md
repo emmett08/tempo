@@ -33,3 +33,8 @@ Release CI installs the locked Jsonnet dependencies when checking generated
 examples. Updating them against upstream heads can remove the historical
 Kubernetes library version required by this release; dependency updates remain
 an explicit maintenance action.
+
+The release also pins Grafana's e2e test helper at
+`cfcdc6861c9cbf097547e905af8251a40f747350`, which replaces the removed MinIO
+community image with the Silo test image and command. This restores the S3
+integration fixtures without changing Tempo's runtime dependency versions.
