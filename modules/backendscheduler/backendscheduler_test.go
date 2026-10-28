@@ -195,7 +195,12 @@ func TestBackendScheduler(t *testing.T) {
 			s3, err := New(cfg, store, limits, rr, ww)
 			require.NoError(t, err)
 
+			// The local test backend truncates and rewrites the cache file.
+			// Serialize recovery with the running scheduler's flush so the
+			// read cannot observe a partially written JSON document.
+			s.mtx.Lock()
 			err = s3.starting(ctx)
+			s.mtx.Unlock()
 			require.NoError(t, err)
 
 			// Ensure that the jobs are the same

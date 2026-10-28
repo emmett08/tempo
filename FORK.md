@@ -43,3 +43,8 @@ Upstream fix `f97d7856253481b24b8c3ed207c17676a2fbe7c9` also pins the
 compaction selector's clock in its one-second-window test. The production clock
 still defaults to `time.Now`; the test no longer depends on staying inside the
 same wall-clock second while the suite runs.
+
+The scheduler recovery test also serializes its local-backend read with the
+running scheduler's existing cache-flush mutex. The filesystem fixture truncates
+and rewrites the cache file, so an overlapping recovery read could see incomplete
+JSON. This test-only synchronization does not change production cache behavior.
