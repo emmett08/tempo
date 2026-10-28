@@ -1,9 +1,14 @@
 # Tempo 3.0.3 block bounds fixes
 
-Branch `fix/3.0.3-block-time-bounds` preserves the Tempo 3.0.3 runtime and applies
+Branch `release/3.0.3` preserves the Tempo 3.0.3 runtime and applies
 the block metadata and metrics-sharding fixes. Base source:
 `1900ed7bb5cad1a3edc285783d7d4ac4278337dc`; fix commit:
 `2ebbd8f5a97607bc45aac2550155db9bbacef8c0`.
+
+Pull requests into the release branch run verification without publishing. A
+normal merge triggers the image workflow from the merged source SHA. The
+separate `main` line tracks newer upstream development; fixes there are ported
+through a main-based PR.
 
 The fork image workflow runs the seven ingestion and five frontend regression
 cases plus adjacent timestamp/exemplar tests with the race detector. It builds
